@@ -268,6 +268,7 @@ class Uploadr:
         self.uploaded = shelve.open( HISTORY_FILE )
         for image in newImages:
             self.uploadImage( image )
+            self.addImageToFlickrSet( image )
         self.uploaded.close()
         
     def grabNewImages( self ):
@@ -277,7 +278,7 @@ class Uploadr:
             (dirpath, dirnames, filenames) = data
             for f in filenames :
                 ext = f.lower().split(".")[-1]
-                if ( ext == "jpg" or ext == "gif" or ext == "png" ):
+                if ( ext == "jpg" or ext == "jpeg" or ext == "raw" or ext == "gif" or ext == "png" or ext == "mov" or ext == "mpeg" or ext == "wmv" or ext == "avi" ):
                     images.append( os.path.normpath( dirpath + "/" + f ) )
         images.sort()
         return images
@@ -311,6 +312,24 @@ class Uploadr:
             except:
                 print str(sys.exc_info())
 
+    def addImageToFlickrSet( self, image ):
+        directoryName = image.lower().split(".")[-2]
+        photoSetIdFile = os.path.normpath( os.path.dirname(image) + "/" + ".flickrPhotoSetId" )
+        photoSetId = getCachedPhotoSetId(photoSetIdFile)
+        if photoSetId == None:
+            print "Creating photoSet for folder ", directoryName , "...",
+        else :
+            print "Addind photo to existing photoSet ", directoryName , "...",
+
+
+    """
+    Attempts to get the flickr token from disk.
+    """
+    def getCachedPhotoSetId( self , photoSetIdFile): 
+        if ( os.path.exists( photoSetIdFile )):
+            return open( photoSetIdFile ).read()
+        else :
+            return None
 
     def logUpload( self, photoID, imageName ):
         photoID = str( photoID )
