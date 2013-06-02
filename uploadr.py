@@ -268,7 +268,6 @@ class Uploadr:
         self.uploaded = shelve.open( HISTORY_FILE )
         for image in newImages:
             self.uploadImage( image )
-            self.addImageToFlickrSet( image )
         self.uploaded.close()
         
     def grabNewImages( self ):
@@ -306,20 +305,34 @@ class Uploadr:
                 if ( self.isGood( res ) ):
                     print "successful."
                     self.logUpload( res.photoid, image )
+                    self.addImageToFlickrSet( res.photoid, image )
                 else :
                     print "problem.."
                     self.reportError( res )
             except:
                 print str(sys.exc_info())
 
-    def addImageToFlickrSet( self, image ):
+    def addImageToFlickrSet( self, photoID, image ):
         directoryName = image.lower().split(".")[-2]
         photoSetIdFile = os.path.normpath( os.path.dirname(image) + "/" + ".flickrPhotoSetId" )
         photoSetId = getCachedPhotoSetId(photoSetIdFile)
         if photoSetId == None:
-            print "Creating photoSet for folder ", directoryName , "...",
+            print "Creating photoSet for folder ", directoryName , "..."
         else :
-            print "Addind photo to existing photoSet ", directoryName , "...",
+            print "Addind photo to existing photoSet ", directoryName , "..."
+            d = {
+                api.method   : "flickr.photosets.addPhoto"
+                api.token    : str(self.token),
+                api.perms    : str(self.perms),
+                "photoset_id": str( photoSetId ),
+                "photo_id"   : str( photoId )
+            }
+            sig = self.signCall( d )
+            d[ api.sig ] = sig
+            d[ api.key ] = FLICKR[ api.key ]        
+            url = self.build_request(api.rest, d, (photo,))    
+            xml = urllib2.urlopen( url ).read()
+            res = xmltramp.parse(xml)
 
 
     """
