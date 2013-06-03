@@ -312,27 +312,56 @@ class Uploadr:
             except:
                 print str(sys.exc_info())
 
-    def addImageToFlickrSet( self, photoID, image ):
+    def addImageToFlickrSet( self, photoId, image ):
         directoryName = image.lower().split(".")[-2]
         photoSetIdFile = os.path.normpath( os.path.dirname(image) + "/" + ".flickrPhotoSetId" )
         photoSetId = getCachedPhotoSetId(photoSetIdFile)
         if photoSetId == None:
-            print "Creating photoSet for folder ", directoryName , "..."
+            createPhotoSet(directoryName, photoId)
         else :
-            print "Addind photo to existing photoSet ", directoryName , "..."
-            d = {
-                api.method   : "flickr.photosets.addPhoto"
-                api.token    : str(self.token),
-                api.perms    : str(self.perms),
-                "photoset_id": str( photoSetId ),
-                "photo_id"   : str( photoId )
-            }
-            sig = self.signCall( d )
-            d[ api.sig ] = sig
-            d[ api.key ] = FLICKR[ api.key ]        
-            url = self.build_request(api.rest, d, (photo,))    
-            xml = urllib2.urlopen( url ).read()
-            res = xmltramp.parse(xml)
+            addPhotoToPhotoSet(photoId,photoSetId)
+
+    """
+    Create a new PhotoSet
+    """
+    def createPhotoSet( self, directoryName, photoId):
+        print "Creating photoSet for folder ", directoryName , "..."
+        d = {
+            api.method   : "flickr.photosets.create"
+            api.token    : str(self.token),
+            api.perms    : str(self.perms),
+            "title"      : str
+            "photoset_id": str( photoSetId ),
+            "photo_id"   : str( photoId )
+        }
+        sig = self.signCall( d )
+        d[ api.sig ] = sig
+        d[ api.key ] = FLICKR[ api.key ]        
+        url = self.build_request(api.rest, d, (photo,))    
+        xml = urllib2.urlopen( url ).read()
+        res = xmltramp.parse(xml)
+
+
+
+    """
+    Add a photo to an existing photoSet
+    """
+    def addPhotoToPhotoSet( self, photoId, photoSetId):
+        print "Addind photo to existing photoSet ", directoryName , "..."
+        d = {
+            api.method   : "flickr.photosets.addPhoto"
+            api.token    : str(self.token),
+            api.perms    : str(self.perms),
+            "photoset_id": str( photoSetId ),
+            "photo_id"   : str( photoId )
+        }
+        sig = self.signCall( d )
+        d[ api.sig ] = sig
+        d[ api.key ] = FLICKR[ api.key ]        
+        url = self.build_request(api.rest, d, (photo,))    
+        xml = urllib2.urlopen( url ).read()
+        res = xmltramp.parse(xml)
+
 
 
     """
