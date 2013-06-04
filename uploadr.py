@@ -37,7 +37,7 @@ import sys, time, os, urllib2, shelve, string, xmltramp, mimetools, mimetypes, m
 #
 # Location to scan for new images
 #   
-IMAGE_DIR = "/media/disk/pictures"  
+IMAGE_DIR = "/home/mwerlen/Pictures/tests/"  
 #
 #   Flickr settings
 #
@@ -224,6 +224,28 @@ class Uploadr:
         except:
             print "Issue writing token to local cache " , str(sys.exc_info())
 
+
+
+    """
+    Attempts to get the flickr token from disk.
+    """
+    def getCachedPhotoSetId( self, photoSetIdFile): 
+        if ( os.path.exists( photoSetIdFile )):
+            return open( photoSetIdFile ).read()
+        else :
+            return None
+
+    """
+    Store photoSetId on local file
+    """
+    def setCachedPhotoSetId( self, photoSetIdFile, photoSetId ):
+        try:
+            open( photoSetIdFile , "w").write( str(photoSetId) )
+        except:
+            print "Issue writing photoSetId to local photoSetIdFile " , str(sys.exc_info())
+
+
+
     """
     flickr.auth.checkToken
 
@@ -312,34 +334,43 @@ class Uploadr:
             except:
                 print str(sys.exc_info())
 
+
+    """
+    """
     def addImageToFlickrSet( self, photoId, image ):
         directoryName = image.lower().split(".")[-2]
         photoSetIdFile = os.path.normpath( os.path.dirname(image) + "/" + ".flickrPhotoSetId" )
-        photoSetId = getCachedPhotoSetId(photoSetIdFile)
+        photoSetId = self.getCachedPhotoSetId( photoSetIdFile )
         if photoSetId == None:
-            createPhotoSet(directoryName, photoId)
+            self.createPhotoSet(photoSetIdFile, directoryName, photoId)
         else :
-            addPhotoToPhotoSet(photoId,photoSetId)
+            self.addPhotoToPhotoSet(photoId,photoSetId)
 
     """
     Create a new PhotoSet
     """
-    def createPhotoSet( self, directoryName, photoId):
-        print "Creating photoSet for folder ", directoryName , "..."
+    def createPhotoSet( self, photoSetIdFile, directoryName, photoId):
+        print "Creating photoSet for folder ", directoryName , "...",
         d = {
-            api.method   : "flickr.photosets.create"
+            api.method   : "flickr.photosets.create",
             api.token    : str(self.token),
             api.perms    : str(self.perms),
-            "title"      : str
-            "photoset_id": str( photoSetId ),
-            "photo_id"   : str( photoId )
+            "title"      : str(directoryName),
+            "description": str(directoryName),
+            "primary_photo_id"   : str(photoId)
         }
         sig = self.signCall( d )
         d[ api.sig ] = sig
         d[ api.key ] = FLICKR[ api.key ]        
-        url = self.build_request(api.rest, d, (photo,))    
+        url = self.build_request(api.rest, d, ())    
         xml = urllib2.urlopen( url ).read()
         res = xmltramp.parse(xml)
+        if ( self.isGood( res ) ):
+            print "successful."
+            self.setCachedPhotoSetId(photoSetIdFile, res.photoset('id'))
+        else :
+            print "problem.."
+            self.reportError( res )
 
 
 
@@ -347,9 +378,9 @@ class Uploadr:
     Add a photo to an existing photoSet
     """
     def addPhotoToPhotoSet( self, photoId, photoSetId):
-        print "Addind photo to existing photoSet ", directoryName , "..."
+        print "Addind photo to existing photoSet",photoSetId,"...",
         d = {
-            api.method   : "flickr.photosets.addPhoto"
+            api.method   : "flickr.photosets.addPhoto",
             api.token    : str(self.token),
             api.perms    : str(self.perms),
             "photoset_id": str( photoSetId ),
@@ -358,20 +389,14 @@ class Uploadr:
         sig = self.signCall( d )
         d[ api.sig ] = sig
         d[ api.key ] = FLICKR[ api.key ]        
-        url = self.build_request(api.rest, d, (photo,))    
+        url = self.build_request(api.rest, d, ())    
         xml = urllib2.urlopen( url ).read()
         res = xmltramp.parse(xml)
-
-
-
-    """
-    Attempts to get the flickr token from disk.
-    """
-    def getCachedPhotoSetId( self , photoSetIdFile): 
-        if ( os.path.exists( photoSetIdFile )):
-            return open( photoSetIdFile ).read()
+        if ( self.isGood( res ) ):
+            print "successful."
         else :
-            return None
+            print "problem.."
+            self.reportError( res )
 
     def logUpload( self, photoID, imageName ):
         photoID = str( photoID )
