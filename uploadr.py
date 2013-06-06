@@ -284,6 +284,7 @@ class Uploadr:
      
              
     def upload( self ):
+        print "Starting upload"
         newImages = self.grabNewImages()
         if ( not self.checkToken() ):
             self.authenticate()
@@ -297,11 +298,13 @@ class Uploadr:
         foo = os.walk( IMAGE_DIR )
         for data in foo:
             (dirpath, dirnames, filenames) = data
+            print "Scanning", dirpath,"..."
             for f in filenames :
                 ext = f.lower().split(".")[-1]
                 if ( ext == "jpg" or ext == "jpeg" or ext == "raw" or ext == "gif" or ext == "png" or ext == "mov" or ext == "mpeg" or ext == "wmv" or ext == "avi" ):
                     images.append( os.path.normpath( dirpath + "/" + f ) )
         images.sort()
+        print "All images listed"
         return images
                    
     
