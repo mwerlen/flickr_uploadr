@@ -338,19 +338,19 @@ class Uploadr:
     """
     """
     def addImageToFlickrSet( self, photoId, image ):
-        directoryName = image.lower().split(".")[-2]
+        directoryName = image.lower().split("/")[-2]
         photoSetIdFile = os.path.normpath( os.path.dirname(image) + "/" + ".flickrPhotoSetId" )
         photoSetId = self.getCachedPhotoSetId( photoSetIdFile )
         if photoSetId == None:
             self.createPhotoSet(photoSetIdFile, directoryName, photoId)
         else :
-            self.addPhotoToPhotoSet(photoId,photoSetId)
+            self.addPhotoToPhotoSet( photoSetIdFile, directoryName, photoId,photoSetId)
 
     """
     Create a new PhotoSet
     """
     def createPhotoSet( self, photoSetIdFile, directoryName, photoId):
-        print "Creating photoSet for folder ", directoryName , "...",
+        print "Creating photoSet for folder", directoryName , "...",
         d = {
             api.method   : "flickr.photosets.create",
             api.token    : str(self.token),
@@ -377,7 +377,7 @@ class Uploadr:
     """
     Add a photo to an existing photoSet
     """
-    def addPhotoToPhotoSet( self, photoId, photoSetId):
+    def addPhotoToPhotoSet( self, photoSetIdFile, directoryName, photoId, photoSetId):
         print "Addind photo to existing photoSet",photoSetId,"...",
         d = {
             api.method   : "flickr.photosets.addPhoto",
@@ -397,6 +397,7 @@ class Uploadr:
         else :
             print "problem.."
             self.reportError( res )
+            self.createPhotoSet(photoSetIdFile, directoryName, photoId)
 
     def logUpload( self, photoID, imageName ):
         photoID = str( photoID )
