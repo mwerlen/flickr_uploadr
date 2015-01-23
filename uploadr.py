@@ -62,7 +62,7 @@ HISTORY_FILE = "uploadr.history"
 FLICKR["secret" ] = "fb2377b77bd2639c"
 FLICKR["api_key" ] = "2d7076217eb2dc94997cba1bb61bd5b5"
 class APIConstants:
-    base = "http://flickr.com/services/"
+    base = "https://flickr.com/services/"
     rest   = base + "rest/"
     auth   = base + "auth/"
     upload = base + "upload/"
