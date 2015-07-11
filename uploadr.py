@@ -304,7 +304,8 @@ class Uploadr:
                 if ( ext == "jpg" or ext == "jpeg" or ext == "raw" or ext == "gif" or ext == "png" or ext == "mov" or ext == "mpeg" or ext == "wmv" or ext == "avi" ):
                     images.append( os.path.normpath( dirpath + "/" + f ) )
         images.sort()
-        print "All images listed"
+        print str(len(images)) + " images listed. Wait while checking uploads..."
+        sys.stdout.flush()
         return images
                    
     
