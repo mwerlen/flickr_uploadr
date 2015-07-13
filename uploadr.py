@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import sys, time, os, urllib2, shelve, string, xmltramp, mimetools, mimetypes, md5, webbrowser
+import sys, time, os, urllib2, shelve, string, xmltramp, mimetools, mimetypes, md5, webbrowser, unicodedata
 #
 #   uploadr.py
 #
@@ -317,13 +317,15 @@ class Uploadr:
             print "Uploading ", image , "...",
             try:
                 photo = ('photo', image, open(image,'rb').read())
+                filename = self.getImageTitle(image)
                 d = {
                     api.token   : str(self.token),
                     api.perms   : str(self.perms),
                     "tags"      : str( FLICKR["tags"] ),
                     "is_public" : str( FLICKR["is_public"] ),
                     "is_friend" : str( FLICKR["is_friend"] ),
-                    "is_family" : str( FLICKR["is_family"] )
+                    "is_family" : str( FLICKR["is_family"] ),
+                    "title"     : str( filename )
                 }
                 sig = self.signCall( d )
                 d[ api.sig ] = sig
@@ -343,8 +345,14 @@ class Uploadr:
         else:
             print "Already uploaded image", image
 
-
-
+    """
+    get Image title from image file
+    """
+    def getImageTitle(self, image):
+        filename = os.path.splitext(os.path.basename(image))[0]
+        nkfd_form = unicodedata.normalize('NFKD', unicode(filename, errors='ignore'))
+        ufilename = u"".join([c for c in nkfd_form if not unicodedata.combining(c)])
+        return ufilename.encode('ascii', 'ignore')
 
     """
     Get photos listing from a file
@@ -352,9 +360,7 @@ class Uploadr:
     def isAlreadyUploaded(self, image ):
         photoSetIdFile = os.path.normpath( os.path.dirname(image) + "/" + ".flickrPhotoSetId" )
         photoSetId = self.getCachedPhotoSetId( photoSetIdFile )
-        filename = os.path.splitext(os.path.basename(image))[0]
-        if isinstance(filename,unicode):
-            filename = filename.encode('ascii', 'ignore')
+        filename = self.getImageTitle(image)
         if photoSetId != None:
             if photoSetId not in self.listings:
                 self.getPhotoListingFromPhotoSet(photoSetId)
