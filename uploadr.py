@@ -12,6 +12,7 @@ import sys, time, os, urllib2, shelve, string, xmltramp, mimetools, mimetypes, m
 #
 #   Inspired by:
 #        http://micampe.it/things/flickruploadr
+#        Cameron Mallory   cmallory/berserk.org
 #
 #   Usage:
 #
@@ -23,13 +24,11 @@ import sys, time, os, urllib2, shelve, string, xmltramp, mimetools, mimetypes, m
 #   cron entry (runs at the top of every hour )
 #   0  *  *   *   * /full/path/to/uploadr.py > /dev/null 2>&1
 #
-#   September 2005
-#   Cameron Mallory   cmallory/berserk.org
-#
 #   This code has been updated to use the new Auth API from flickr.
 #
 #   You may use this code however you see fit in any form whatsoever.
 #
+
 ##
 ##  Items you will want to change
 ## 
@@ -57,10 +56,6 @@ FLICKR = {"title": "",
 #   How often to check for new images to upload  (in seconds )
 #
 SLEEP_TIME = 10 * 60
-#
-#   File we keep the history of uploaded images in.
-#
-HISTORY_FILE = "uploadr.history"
 
 ##
 ##  You shouldn't need to modify anything below here
@@ -90,6 +85,7 @@ class Uploadr:
     token = None
     perms = ""
     TOKEN_FILE = ".flickrToken"
+    listings = {}
     
     def __init__( self ):
         self.token = self.getCachedToken()
@@ -294,10 +290,8 @@ class Uploadr:
         newImages = self.grabNewImages()
         if ( not self.checkToken() ):
             self.authenticate()
-        self.uploaded = shelve.open( HISTORY_FILE )
         for image in newImages:
             self.uploadImage( image )
-        self.uploaded.close()
         print "End of upload"
         sys.stdout.flush()
         
@@ -319,7 +313,7 @@ class Uploadr:
                    
     
     def uploadImage( self, image ):
-        if ( not self.uploaded.has_key( image ) ):
+        if ( not self.isAlreadyUploaded(image) ):
             print "Uploading ", image , "...",
             try:
                 photo = ('photo', image, open(image,'rb').read())
@@ -339,7 +333,6 @@ class Uploadr:
                 res = xmltramp.parse(xml)
                 if ( self.isGood( res ) ):
                     print "successful."
-                    self.logUpload( res.photoid, image )
                     self.addImageToFlickrSet( res.photoid, image )
                 else :
                     print "problem.."
@@ -347,6 +340,25 @@ class Uploadr:
                 sys.stdout.flush()
             except:
                 print str(sys.exc_info())
+        else:
+            print "Already uploaded image", image
+
+
+
+
+    """
+    Get photos listing from a file
+    """
+    def isAlreadyUploaded(self, image ):
+        photoSetIdFile = os.path.normpath( os.path.dirname(image) + "/" + ".flickrPhotoSetId" )
+        photoSetId = self.getCachedPhotoSetId( photoSetIdFile )
+        filename = os.path.splitext(os.path.basename(image))[0]
+        if photoSetId != None:
+            if photoSetId not in self.listings:
+                self.getPhotoListingFromPhotoSet(photoSetId)
+            if photoSetId in self.listings:
+                return filename in self.listings[photoSetId]
+        return False
 
 
     """
@@ -381,7 +393,9 @@ class Uploadr:
         res = xmltramp.parse(xml)
         if ( self.isGood( res ) ):
             print "successful."
-            self.setCachedPhotoSetId(photoSetIdFile, res.photoset('id'))
+            photoSetId  = res.photoset('id')
+            self.listings[photoSetId] = [];
+            self.setCachedPhotoSetId(photoSetIdFile, photoSetId)
         else :
             print "problem.."
             self.reportError( res )
@@ -415,12 +429,36 @@ class Uploadr:
             self.createPhotoSet(photoSetIdFile, directoryName, photoId)
         sys.stdout.flush()
 
-    def logUpload( self, photoID, imageName ):
-        photoID = str( photoID )
-        imageName = str( imageName )
-        self.uploaded[ imageName ] = photoID
-        self.uploaded[ photoID ] = imageName
-            
+
+    """
+    Get photoSet photos listing
+    """
+    def getPhotoListingFromPhotoSet( self, photoSetId):
+        print "Getting photo listing for photoset",photoSetId,"...",
+        d = {
+            api.method   : "flickr.photosets.getPhotos",
+            api.token    : str(self.token),
+            api.perms    : str(self.perms),
+            "photoset_id": str( photoSetId ),
+            "per_page"   : str( 500 )
+        }
+        sig = self.signCall( d )
+        d[ api.sig ] = sig
+        d[ api.key ] = FLICKR[ api.key ]
+        url = self.build_request(api.rest, d, ())
+        xml = urllib2.urlopen( url ).read()
+        res = xmltramp.parse(xml)
+        if ( self.isGood( res ) ):
+            print "successful."
+            photos = []
+            for photo in res.photoset:
+                photos.append(photo('title'))
+            self.listings[photoSetId] = photos
+        else :
+            print "problem.."
+            self.reportError( res )
+        sys.stdout.flush()
+
     #
     #
     # build_request/encode_multipart_formdata code is from www.voidspace.org.uk/atlantibots/pythonutils.html
