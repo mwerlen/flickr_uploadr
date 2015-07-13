@@ -352,7 +352,8 @@ class Uploadr:
     def isAlreadyUploaded(self, image ):
         photoSetIdFile = os.path.normpath( os.path.dirname(image) + "/" + ".flickrPhotoSetId" )
         photoSetId = self.getCachedPhotoSetId( photoSetIdFile )
-        filename = str(os.path.splitext(os.path.basename(image))[0])
+        filename = os.path.splitext(os.path.basename(image))[0]
+        filename = filename.decode('utf-8').encode('ascii', 'ignore')
         if photoSetId != None:
             if photoSetId not in self.listings:
                 self.getPhotoListingFromPhotoSet(photoSetId)
@@ -452,7 +453,7 @@ class Uploadr:
             print "successful."
             photos = []
             for photo in res.photoset:
-                photos.append(str(photo('title')))
+                photos.append(photo('title').decode('utf-8').encode('ascii', 'ignore'))
             self.listings[photoSetId] = photos
         else :
             print "problem.."
