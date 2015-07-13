@@ -37,7 +37,7 @@ import sys, time, os, urllib2, shelve, string, xmltramp, mimetools, mimetypes, m
 #
 # Location to scan for new images
 #   
-IMAGE_DIR = "/home/mwerlen/Pictures/tests/"  
+IMAGE_DIR = "/media/disk/pictures/"  
 
 #
 # Locations to ignore
