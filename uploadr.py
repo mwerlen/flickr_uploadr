@@ -38,6 +38,12 @@ import sys, time, os, urllib2, shelve, string, xmltramp, mimetools, mimetypes, m
 # Location to scan for new images
 #   
 IMAGE_DIR = "/home/mwerlen/Pictures/tests/"  
+
+#
+# Locations to ignore
+#
+EXCLUDED_DIRS = [".picasaoriginals"] 
+
 #
 #   Flickr settings
 #
@@ -298,7 +304,8 @@ class Uploadr:
         foo = os.walk( IMAGE_DIR )
         for data in foo:
             (dirpath, dirnames, filenames) = data
-            print "Scanning", dirpath,"..."
+            dirnames[:] = [d for d in dirnames if d not in EXCLUDED_DIRS]
+            print "Scanning", dirpath
             for f in filenames :
                 ext = f.lower().split(".")[-1]
                 if ( ext == "jpg" or ext == "jpeg" or ext == "raw" or ext == "gif" or ext == "png" or ext == "mov" or ext == "mpeg" or ext == "wmv" or ext == "avi" ):
