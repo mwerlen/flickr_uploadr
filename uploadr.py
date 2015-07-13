@@ -298,6 +298,8 @@ class Uploadr:
         for image in newImages:
             self.uploadImage( image )
         self.uploaded.close()
+        print "End of upload"
+        sys.stdout.flush()
         
     def grabNewImages( self ):
         images = []
@@ -311,7 +313,7 @@ class Uploadr:
                 if ( ext == "jpg" or ext == "jpeg" or ext == "raw" or ext == "gif" or ext == "png" or ext == "mov" or ext == "mpeg" or ext == "wmv" or ext == "avi" ):
                     images.append( os.path.normpath( dirpath + "/" + f ) )
         images.sort()
-        print str(len(images)) + " images listed. Wait while checking uploads..."
+        print str(len(images)) + " images listed. Wait while checking uploads (this may be very long)..."
         sys.stdout.flush()
         return images
                    
@@ -342,6 +344,7 @@ class Uploadr:
                 else :
                     print "problem.."
                     self.reportError( res )
+                sys.stdout.flush()
             except:
                 print str(sys.exc_info())
 
@@ -382,6 +385,7 @@ class Uploadr:
         else :
             print "problem.."
             self.reportError( res )
+        sys.stdout.flush()
 
 
 
@@ -409,6 +413,7 @@ class Uploadr:
             print "problem.."
             self.reportError( res )
             self.createPhotoSet(photoSetIdFile, directoryName, photoId)
+        sys.stdout.flush()
 
     def logUpload( self, photoID, imageName ):
         photoID = str( photoID )
@@ -477,6 +482,7 @@ class Uploadr:
             print "Error:", str( res.err('code') + " " + res.err('msg') )
         except:
             print "Error: " + str( res )
+        sys.stdout.flush()
 
     """
     Send the url and get a response.  Let errors float up
@@ -490,6 +496,7 @@ class Uploadr:
         while ( True ):
             self.upload()
             print "Last check: " , str( time.asctime(time.localtime()))
+            sys.stdout.flush()
             time.sleep( SLEEP_TIME )
       
 if __name__ == "__main__":
