@@ -301,7 +301,7 @@ class Uploadr:
         for data in foo:
             (dirpath, dirnames, filenames) = data
             dirnames[:] = [d for d in dirnames if d not in EXCLUDED_DIRS]
-            print "Scanning", dirpath
+            #print "Scanning", dirpath
             for f in filenames :
                 ext = f.lower().split(".")[-1]
                 if ( ext == "jpg" or ext == "jpeg" or ext == "raw" or ext == "gif" or ext == "png" or ext == "mov" or ext == "mpeg" or ext == "wmv" or ext == "avi" ):
@@ -343,7 +343,8 @@ class Uploadr:
             except:
                 print str(sys.exc_info())
         else:
-            print "Already uploaded image", image
+            #print "Already uploaded image", image
+            pass
 
     """
     get Image title from image file
@@ -442,7 +443,7 @@ class Uploadr:
     Get photoSet photos listing
     """
     def getPhotoListingFromPhotoSet( self, photoSetId):
-        print "Getting photo listing for photoset",photoSetId,"...",
+        #print "Getting photo listing for photoset",photoSetId,"...",
         d = {
             api.method   : "flickr.photosets.getPhotos",
             api.token    : str(self.token),
@@ -457,13 +458,13 @@ class Uploadr:
         xml = urllib2.urlopen( url ).read()
         res = xmltramp.parse(xml)
         if ( self.isGood( res ) ):
-            print "successful."
+            #print "successful."
             photos = []
             for photo in res.photoset:
                 photos.append(photo('title').encode('ascii', 'ignore'))
             self.listings[photoSetId] = photos
         else :
-            print "problem.."
+            print "Problem while getting photo listing for photoset",photoSetId
             self.reportError( res )
         sys.stdout.flush()
 
