@@ -4,7 +4,7 @@
 from unittest import TestCase
 import uploadr
 
-photoSetId = 72157655931047502
+photoSetId = 72157692120583452
 
 
 class TestUploadr(TestCase):
