@@ -431,9 +431,10 @@ class Uploadr:
         xml = urllib2.urlopen( url ).read()
         res = xmltramp.parse(xml)
         if ( self.isGood( res ) ):
-            print "successful."
+            #print "successful."
+            pass
         else :
-            print "problem.."
+            print "Addind photo to existing photoSet",photoSetId,"...","problem.."
             self.reportError( res )
             self.createPhotoSet(photoSetIdFile, directoryName, photoId)
         sys.stdout.flush()
