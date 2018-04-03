@@ -416,7 +416,7 @@ class Uploadr:
     Add a photo to an existing photoSet
     """
     def addPhotoToPhotoSet( self, photoSetIdFile, directoryName, photoId, photoSetId):
-        print "Addind photo to existing photoSet",photoSetId,"...",
+        #print "Addind photo to existing photoSet",photoSetId,"...",
         d = {
             api.method   : "flickr.photosets.addPhoto",
             api.token    : str(self.token),
@@ -442,14 +442,15 @@ class Uploadr:
     """
     Get photoSet photos listing
     """
-    def getPhotoListingFromPhotoSet( self, photoSetId):
-        #print "Getting photo listing for photoset",photoSetId,"...",
+    def getPhotoListingFromPhotoSet( self, photoSetId, page=1):
+        #print "Getting photo listing for photoset", photoSetId, "for page", page, "...",
         d = {
             api.method   : "flickr.photosets.getPhotos",
             api.token    : str(self.token),
             api.perms    : str(self.perms),
             "photoset_id": str( photoSetId ),
-            "per_page"   : str( 500 )
+            "per_page"   : str( 500 ),
+            "page"       : str( page )
         }
         sig = self.signCall( d )
         d[ api.sig ] = sig
@@ -462,7 +463,12 @@ class Uploadr:
             photos = []
             for photo in res.photoset:
                 photos.append(photo('title').encode('ascii', 'ignore'))
-            self.listings[photoSetId] = photos
+            if photoSetId in self.listings :
+                self.listings[photoSetId].extend(photos)
+            else :
+                self.listings[photoSetId] = photos
+            if int(res.photoset('page')) < int(res.photoset('pages')) :
+                self.getPhotoListingFromPhotoSet(photoSetId, page+1)
         else :
             print "Problem while getting photo listing for photoset",photoSetId
             self.reportError( res )
